@@ -132,16 +132,11 @@ module RSpotify
     #           playlist.add_tracks!(tracks, position: 20)
     #           playlist.tracks[20].name #=> "Somebody That I Used To Know"
     def add_tracks!(tracks, position: nil)
-      track_uris = nil
-      if tracks.first.is_a? String
-        track_uris = tracks.join(',')
-      else
-        track_uris = tracks.map(&:uri).join(',')
-      end
-      url = "#{@path}/tracks?uris=#{track_uris}"
-      url << "&position=#{position}" if position
+      tracks = tracks.map(&:uri) unless tracks.first.is_a?(String)
+      body = { uris: tracks }
+      body[:position] = position if position
 
-      response = User.oauth_post(@owner.id, url, {})
+      response = User.oauth_post @owner.id, "#{@path}/tracks", body
       @total += tracks.size
       @tracks_cache = nil
 

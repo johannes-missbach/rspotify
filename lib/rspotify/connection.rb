@@ -59,6 +59,7 @@ module RSpotify
       url << "?#{query}" if query
 
       begin
+        puts "#{verb} #{url} #{params.join ' '}"
         response = RestClient.send(verb, url, *params)
       rescue RestClient::Unauthorized
         if @client_token

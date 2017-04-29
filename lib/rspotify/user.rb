@@ -63,8 +63,20 @@ module RSpotify
 
     RSpotify::VERBS.each do |verb|
       define_singleton_method "oauth_#{verb}" do |user_id, path, *params|
+
+        # rest-client 2.0 ugly quickfix
+        if %w(post put).include?(verb) && !params[0].nil? && !params[0].is_a?(String)
+          params[0] = params[0].to_json
+        end
+
         params << oauth_header(user_id)
-        oauth_send(user_id, verb, path, *params)
+        begin
+          oauth_send(user_id, verb, path, *params)
+        rescue RestClient::ExceptionWithResponse => e
+          puts e.response
+          raise
+        end
+
       end
     end
 
@@ -383,7 +395,7 @@ module RSpotify
     #           top_artists.first.name #=> "Nine Inch Nails"
     def top_artists(limit: 20, offset: 0, time_range: 'medium_term')
       url = "me/top/artists?limit=#{limit}&offset=#{offset}&time_range=#{time_range}"
-      response = User.oauth_get(@id, url) 
+      response = User.oauth_get(@id, url)
       return response if RSpotify.raw_response
       response['items'].map { |i| Artist.new i }
     end
@@ -401,7 +413,7 @@ module RSpotify
     #           top_tracks.first.name #=> "Ice to Never"
     def top_tracks(limit: 20, offset: 0, time_range: 'medium_term')
       url = "me/top/tracks?limit=#{limit}&offset=#{offset}&time_range=#{time_range}"
-      response = User.oauth_get(@id, url) 
+      response = User.oauth_get(@id, url)
       return response if RSpotify.raw_response
       response['items'].map { |i| Track.new i }
     end
